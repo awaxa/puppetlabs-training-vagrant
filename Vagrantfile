@@ -15,6 +15,24 @@ STUDENTS.times do
   IPS << IPS.last.succ
 end
 
+UBUNTU_MANIFEST = <<UBUNTU_MANIFEST
+resources { 'host': purge => true }
+host { 'master.puppetlabs.vm':
+  ip           => '#{MASTER}',
+  host_aliases => [ 'puppet' ],
+}
+host { 'ubuntu.puppetlabs.vm':
+  ip           => $::ipaddress_lo,
+  host_aliases => [ 'localhost' ],
+}
+exec { '/bin/hostname ubuntu.puppetlabs.vm': }
+exec { '/bin/sed -i s/localhost/ubuntu.puppetlabs.vm/ /etc/puppetlabs/puppet/puppet.conf': }
+service { 'pe-puppet':
+  ensure => stopped,
+  enable => false,
+}
+UBUNTU_MANIFEST
+
 Vagrant.configure('2') do |config|
   config.vm.synced_folder '.', '/vagrant', disabled: true
 
@@ -46,4 +64,10 @@ Vagrant.configure('2') do |config|
     end
   end
 
+  config.vm.define :ubuntu, autostart: false do |ubuntu|
+    ubuntu.vm.box = 'puppetlabs/ubuntu-12.04-64-puppet-enterprise'
+    ubuntu.vm.network :public_network,
+      bridge: BRIDGE_INTERFACE
+    ubuntu.vm.provision 'shell', inline: "puppet apply -e \"#{UBUNTU_MANIFEST}\""
+  end
 end

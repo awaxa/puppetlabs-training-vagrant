@@ -15,6 +15,13 @@ STUDENTS.times do
   IPS << IPS.last.succ
 end
 
+MASTER_SCRIPT = <<MASTER_SCRIPT
+grep -q master.puppetlabs.vm /etc/hosts || echo #{MASTER} master.puppetlabs.vm >> /etc/hosts
+hostname master.puppetlabs.vm
+sed -i "s/^HOSTNAME=.*$/HOSTNAME=master.puppetlabs.vm/" /etc/sysconfig/network
+passwd -l root
+MASTER_SCRIPT
+
 UBUNTU_MANIFEST = <<UBUNTU_MANIFEST
 resources { 'host': purge => true }
 host { 'master.puppetlabs.vm':
@@ -49,6 +56,7 @@ Vagrant.configure('2') do |config|
     master.vm.network :public_network,
       bridge: BRIDGE_INTERFACE,
       ip: IPS[0]
+    master.vm.provision 'shell', inline: MASTER_SCRIPT
   end
 
   (1..STUDENTS).each do |i|

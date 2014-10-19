@@ -6,6 +6,9 @@ require 'ipaddr'
 STUDENTS = 1
 MASTER = '192.168.168.10'
 BRIDGE_INTERFACE = 'en0: Wi-Fi (AirPort)'
+BOX = 'https://downloads.puppetlabs.com/training/centos-6.5-pe-3.3.2-ptb2.12-vagrant-vbox.box'
+
+BOX_NAME = BOX.split('/').last.sub('.box','')
 
 IPS = [ IPAddr.new(MASTER) ]
 STUDENTS.times do
@@ -13,14 +16,13 @@ STUDENTS.times do
 end
 
 Vagrant.configure('2') do |config|
-  config.vm.box = 'centos-6.5-pe-3.3.2-ptb2.12'
-  config.vm.box_url = 'https://downloads.puppetlabs.com/training/centos-6.5-pe-3.3.2-ptb2.12-vagrant-vbox.box'
-
   config.vm.synced_folder '.', '/vagrant', disabled: true
 
   config.cache.disable! if Vagrant.has_plugin?('vagrant-cachier')
 
   config.vm.define :master do |master|
+    master.vm.box = BOX_NAME
+    master.vm.box_url = BOX
     master.vm.provider 'virtualbox' do |vb|
       vb.customize ['modifyvm', :id, '--memory', '2048']
       vb.customize ['modifyvm', :id, '--cpus', '2']
@@ -33,6 +35,8 @@ Vagrant.configure('2') do |config|
 
   (1..STUDENTS).each do |i|
     config.vm.define "student#{i}".to_sym do |student|
+      student.vm.box = BOX_NAME
+      student.vm.box_url = BOX
       student.vm.provider 'virtualbox' do |vb|
         vb.customize ['modifyvm', :id, '--memory', '512']
       end

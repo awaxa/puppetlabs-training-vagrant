@@ -3,10 +3,12 @@
 
 require 'ipaddr'
 
-STUDENTS = 1
-MASTER = '192.168.168.10'
-BRIDGE_INTERFACE = 'en0: Wi-Fi (AirPort)'
 BOX = 'https://downloads.puppetlabs.com/training/centos-6.5-pe-3.3.2-ptb2.12-vagrant-vbox.box'
+BRIDGE_INTERFACE = 'en0: Wi-Fi (AirPort)'
+MASTER = '192.168.168.10'
+MASTER_RAM = 2048
+MASTER_VCPUS = 2
+STUDENTS = 1
 
 BOX_NAME = BOX.split('/').last.sub('.box','')
 
@@ -123,8 +125,8 @@ Vagrant.configure('2') do |config|
     master.vm.box = BOX_NAME
     master.vm.box_url = BOX
     master.vm.provider 'virtualbox' do |vb|
-      vb.customize ['modifyvm', :id, '--memory', '2048']
-      vb.customize ['modifyvm', :id, '--cpus', '2']
+      vb.customize ['modifyvm', :id, '--memory', MASTER_RAM]
+      vb.customize ['modifyvm', :id, '--cpus', MASTER_VCPUS]
       vb.customize ['modifyvm', :id, '--ioapic', 'on']
     end
     master.vm.network :public_network,

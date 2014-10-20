@@ -13,6 +13,7 @@ Edit the variables at the top of the Vagrantfile
 - `MASTER` IP address for master VM.  student VM `$n` will be assigned `MASTER + $n`
 - `BRIDGE_INTERFACE` host interface for classroom network
 - `BOX` training VM vagrant box URL
+- `MASTER_VCPUS` and `MASTER_RAM` set resource allocation
 
 ## usage
     $ git clone https://github.com/awaxa/puppetlabs-training-vagrant.git

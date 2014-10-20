@@ -32,6 +32,8 @@ unset RUBYLIB
 /bin/hostname "$MASTER_HOSTNAME"
 
 passwd -l root
+
+sed -i s/enabled=1/enabled=0/ /etc/yum.repos.d/{CentOS-Base,epel}.repo
 MASTER_SCRIPT
 
 SETUP_CLASSROOM_MASTER = <<SETUP_CLASSROOM_MASTER

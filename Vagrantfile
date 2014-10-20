@@ -16,11 +16,83 @@ STUDENTS.times do
 end
 
 MASTER_SCRIPT = <<MASTER_SCRIPT
-grep -q master.puppetlabs.vm /etc/hosts || echo #{MASTER} master.puppetlabs.vm >> /etc/hosts
-hostname master.puppetlabs.vm
-sed -i "s/^HOSTNAME=.*$/HOSTNAME=master.puppetlabs.vm/" /etc/sysconfig/network
+#!/bin/bash
+
+export MASTER_HOSTNAME='master.puppetlabs.vm'
+
+# Setup the hostname for the system
+export RUBYLIB=/usr/src/puppet/lib:/usr/src/facter/lib
+/usr/src/puppet/bin/puppet resource host "$MASTER_HOSTNAME" \
+  ensure=present \
+  host_aliases="${MASTER_HOSTNAME/.*/}" \
+  ip=#{MASTER}
+unset RUBYLIB
+
+/bin/sed -i "s/HOSTNAME.*/HOSTNAME=$MASTER_HOSTNAME/" /etc/sysconfig/network
+/bin/hostname "$MASTER_HOSTNAME"
+
 passwd -l root
 MASTER_SCRIPT
+
+SETUP_CLASSROOM_MASTER = <<SETUP_CLASSROOM_MASTER
+#!/bin/bash
+
+export MASTER_HOSTNAME='master.puppetlabs.vm'
+
+export q_all_in_one_install=y
+export q_database_host=localhost
+export q_database_install=y
+export q_database_port=5432
+export q_database_root_password=T3fXWQlfNDPiZA0zewA8
+export q_database_root_user=pe-postgres
+export q_install=y
+export q_pe_database=y
+export q_puppet_cloud_install=n
+export q_puppet_enterpriseconsole_auth_database_name=console_auth
+export q_puppet_enterpriseconsole_auth_database_password=AXWnz9TL0UPVB2PyOLRv
+export q_puppet_enterpriseconsole_auth_database_user=console_auth
+export q_puppet_enterpriseconsole_auth_password=puppetlabs
+export q_puppet_enterpriseconsole_auth_user_email=admin@puppetlabs.com
+export q_puppet_enterpriseconsole_database_name=console
+export q_puppet_enterpriseconsole_database_password=6A98ZMWaooJa78Eo6q5T
+export q_puppet_enterpriseconsole_database_user=console
+export q_puppet_enterpriseconsole_httpd_port=443
+export q_puppet_enterpriseconsole_install=y
+export q_puppet_enterpriseconsole_master_hostname="$MASTER_HOSTNAME"
+export q_puppet_enterpriseconsole_smtp_host=localhost
+export q_puppet_enterpriseconsole_smtp_password=
+export q_puppet_enterpriseconsole_smtp_port=25
+export q_puppet_enterpriseconsole_smtp_use_tls=n
+export q_puppet_enterpriseconsole_smtp_user_auth=n
+export q_puppet_enterpriseconsole_smtp_username=
+export q_puppet_symlinks_install=y
+export q_puppetagent_certname="$MASTER_HOSTNAME"
+export q_puppetagent_install=y
+export q_puppetagent_server="$MASTER_HOSTNAME"
+export q_puppetdb_database_name=pe-puppetdb
+export q_puppetdb_database_password=3i1YuvUqaY48ruwKmeVz
+export q_puppetdb_database_user=pe-puppetdb
+export q_puppetdb_hostname=$MASTER_HOSTNAME
+export q_puppetdb_install=y
+export q_puppetdb_port=8081
+export q_puppetmaster_certname="$MASTER_HOSTNAME"
+export q_puppetmaster_dnsaltnames="${MASTER_HOSTNAME/.*/},${MASTER_HOSTNAME},puppet,puppet.puppetlabs.vm"
+export q_puppetmaster_enterpriseconsole_hostname=localhost
+export q_puppetmaster_enterpriseconsole_port=443
+export q_puppetmaster_install=y
+export q_run_updtvpkg=n
+export q_vendor_packages_install=y
+
+# Run the master installation with an empty file given the exports above
+/root/puppet-enterprise/puppet-enterprise-installer -a /etc/motd
+
+puppet module install pltraining-classroom
+
+export MANIFEST=/etc/puppetlabs/puppet/manifests/site.pp
+grep -q classroom::course $MANIFEST || sed -i '/node default {/a\  include classroom::course::#{ENV['COURSE']}' $MANIFEST
+
+puppet agent --test
+SETUP_CLASSROOM_MASTER
 
 UBUNTU_MANIFEST = <<UBUNTU_MANIFEST
 resources { 'host': purge => true }
@@ -57,6 +129,7 @@ Vagrant.configure('2') do |config|
       bridge: BRIDGE_INTERFACE,
       ip: IPS[0]
     master.vm.provision 'shell', inline: MASTER_SCRIPT
+    master.vm.provision 'shell', inline: SETUP_CLASSROOM_MASTER if ENV['COURSE']
   end
 
   (1..STUDENTS).each do |i|

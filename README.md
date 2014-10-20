@@ -16,5 +16,13 @@ Edit the variables at the top of the Vagrantfile
 
 ## usage
     $ git clone https://github.com/awaxa/puppetlabs-training-vagrant.git
+    Cloning into 'puppetlabs-training-vagrant'...
     $ cd puppetlabs-training-vagrant
     $ vagrant up
+    Bringing machine 'master' up with 'virtualbox' provider...
+
+## automated master setup
+Set the `COURSE` environment variable to install PE and the `pltraining-classroom` module, add `include classroom::course::$COURSE` to the default node definition in `site.pp`, and do an agent run to start `ntpd`.  Requires internet access.
+
+    $ COURSE=fundamentals vagrant up
+    Bringing machine 'master' up with 'virtualbox' provider...

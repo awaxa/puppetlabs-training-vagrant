@@ -95,7 +95,8 @@ puppet module install pltraining-classroom
 export MANIFEST=/etc/puppetlabs/puppet/manifests/site.pp
 grep -q classroom::course $MANIFEST || sed -i '/node default {/a\  include classroom::course::#{ENV['COURSE']}' $MANIFEST
 
-puppet agent --test
+export AGENT='puppet agent --onetime --verbose --ignorecache --no-daemonize --no-usecacheonfailure --no-splay --show_diff'
+$AGENT || $AGENT
 SETUP_CLASSROOM_MASTER
 
 UBUNTU_MANIFEST = <<UBUNTU_MANIFEST
